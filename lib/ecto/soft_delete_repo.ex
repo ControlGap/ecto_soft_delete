@@ -55,18 +55,17 @@ defmodule Ecto.SoftDelete.Repo do
     quote do
       import Ecto.Query
 
-      def soft_delete_all(queryable, opts) do
-        update_all(queryable, [set: [deleted_at: DateTime.utc_now()]], opts)
+      def soft_delete_all(queryable, query_opts) do
+        update_all(queryable, [set: [deleted_at: DateTime.utc_now()]], query_opts)
       end
 
       def soft_delete_all(queryable) do
         update_all(queryable, set: [deleted_at: DateTime.utc_now()])
       end
 
-      def soft_delete(struct_or_changeset, opts) do
-        IO.inspect(opts)
+      def soft_delete(struct_or_changeset, query_opts) do
         Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-        |> update(opts)
+        |> update(query_opts)
       end
 
       def soft_delete(struct_or_changeset) do
@@ -74,9 +73,9 @@ defmodule Ecto.SoftDelete.Repo do
         |> update()
       end
 
-      def soft_delete!(struct_or_changeset, opts) do
+      def soft_delete!(struct_or_changeset, query_opts) do
         Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-        |> update!(opts)
+        |> update!(query_opts)
       end
 
       def soft_delete!(struct_or_changeset) do
