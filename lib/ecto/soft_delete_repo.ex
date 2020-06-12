@@ -53,34 +53,19 @@ defmodule Ecto.SoftDelete.Repo do
 
   defmacro __using__(_opts) do
     quote do
-      import Ecto.Query
-
-      def soft_delete_all(queryable, query_opts) do
-        update_all(queryable, [set: [deleted_at: DateTime.utc_now()]], query_opts)
+      # dont import query here it messes things up, do it down in prepare query...
+      def soft_delete_all(queryable, query_opts \\ []) do
+          update_all(queryable, [set: [deleted_at: DateTime.utc_now()]], query_opts)
       end
 
-      def soft_delete_all(queryable) do
-        update_all(queryable, set: [deleted_at: DateTime.utc_now()])
+      def soft_delete(struct_or_changeset, query_opts \\ []) do
+         Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
+         |> update(query_opts)
       end
 
-      def soft_delete(struct_or_changeset, query_opts) do
-        Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-        |> update(query_opts)
-      end
-
-      def soft_delete(struct_or_changeset) do
-        Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-        |> update()
-      end
-
-      def soft_delete!(struct_or_changeset, query_opts) do
-        Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-        |> update!(query_opts)
-      end
-
-      def soft_delete!(struct_or_changeset) do
-       Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
-       |> update!()
+      def soft_delete!(struct_or_changeset, query_opts \\ []) do
+          Ecto.Changeset.change(struct_or_changeset, deleted_at: DateTime.utc_now())
+          |> update!(query_opts)
       end
 
       @doc """
@@ -89,6 +74,7 @@ defmodule Ecto.SoftDelete.Repo do
       NOTE: will not exclude soft deleted records if :with_deleted option passed as true
       """
       def prepare_query(_operation, query, opts) do
+        import Ecto.Query
         schema_module = get_schema_module_from_query(query)
         fields = if schema_module, do: schema_module.__schema__(:fields), else: []
         soft_deletable? = Enum.member?(fields, :deleted_at)
